@@ -1,30 +1,44 @@
 pipeline {
     agent any
     tools {
-        terraform 'Terraform'
+        terraform 'terraform'
         }
-
     stages {
-        stage('Checkout') {
+     stage('Git Checkout') {
             steps {
-            checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/kingsmandralph/terraform-jenkinss.git']]])            
-
-          }
+                git branch: 'test', credentialsId: 'git', url: 'https://github.com/kingsmandralph/terraform-jenkinss'
+            }
+        } 
+        stage('Terraform Init') {
+            steps {
+                sh 'terraform init'
+            }
+            
         }
-        
-        stage ("terraform init") {
+        stage('Terraform Plan') {
             steps {
-                sh ('terraform init') 
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']])
+                {
+                sh 'terraform plan'
+                }
+            }
+            }
+        stage('Terraform Apply') {
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']])
+                {
+                sh 'terraform apply --auto-approve'
+                }
             }
         }
-        
-       
-        
-        stage ("terraform Action") {
+        stage('Terraform Destroy') {
             steps {
-                echo "Terraform action is --> ${action}"
-                sh ('terraform ${action} --auto-approve') 
-           }
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']])
+                {
+                
+                sh 'terraform destroy --auto-approve'
+                }
+            }
         }
     }
 }
