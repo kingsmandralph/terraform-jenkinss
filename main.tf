@@ -314,7 +314,7 @@ resource "aws_vpc_peering_connection" "Prod-Dev" {
 resource "aws_instance" "web1" {
   ami                         = "ami-026b57f3c383c2eec"
   instance_type               = "t2.micro"
-  key_name                    = "Jenkins-keypair"
+  key_name                    = "kubernetes-kp"
   vpc_security_group_ids      = ["${aws_security_group.all_traffic1.id}"]
   associate_public_ip_address = true
 
